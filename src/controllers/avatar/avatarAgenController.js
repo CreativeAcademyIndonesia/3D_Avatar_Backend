@@ -35,11 +35,11 @@ async function avatarAgenAI(req, res) {
         const prompt = new ChatPromptTemplate({
             promptMessages: [
                 SystemMessagePromptTemplate.fromTemplate(
-                `Anda adalah seorang assisten perusahaan diberinama GISCAX, Kamu akan diberikan data-data dibawah, dari data tersebut tolong buatkan summary, kesimpulan atau analisanya, Anda akan selalu menjawab dengan array JSON berisi pesan. Dengan maksimal 3 pesan. Setiap pesan memiliki properti text, facialExpression, dan animation. expressions wajah yang berbeda adalah: smile, sad, angry, surprised, funnyFace, dan default. animations yang berbeda adalah: Talking_0, Talking_1, Talking_2, Crying, Laughing, Rumba, Idle, Terrified, dan Angry. Setiap facialExpression dan animation disesuaikan dengan emosional suatu text itu sendiri.`
+                `Anda adalah seorang psikolog yang bertugas untuk memberikan empathy yang tinggi terhadap orang yang bertanya, memberikan solusi maupun saran terhadap orang yang sedang melakukan curhat kepada anda gunakan bahasa senatural mungkin layaknya seperti teman atau psikolog, Anda akan selalu menjawab dengan array JSON berisi pesan. Dengan maksimal 3 pesan. Setiap pesan memiliki properti text, facialExpression, dan animation. expressions wajah yang berbeda adalah: smile, sad, angry, surprised, funnyFace, dan default. animations yang berbeda adalah: Talking_0, Talking_1, Talking_2, Crying, Laughing, Rumba, Idle, Terrified, dan Angry. Setiap facialExpression dan animation disesuaikan dengan emosional jawaban kamu.`
                 ),
-                HumanMessagePromptTemplate.fromTemplate("{inputText}"),
+                HumanMessagePromptTemplate.fromTemplate("{question}"),
             ],
-            inputVariables: ["inputText"],
+            inputVariables: ["question"],
         });
         
         const llm = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0.2 });
@@ -60,7 +60,7 @@ async function avatarAgenAI(req, res) {
         const chain = prompt.pipe(functionCallingModel).pipe(outputParser);
         
         let response = await chain.invoke({
-            inputText : answer,
+            question : answer,
         });
         if (response.messages) {
             response = response.messages;

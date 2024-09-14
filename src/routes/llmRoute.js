@@ -4,6 +4,6 @@ const {
     chatAvatar
 } = require('../controllers/llmController')
 
-router.get('/', chatAvatar)
+router.post('/', chatAvatar)
 
 module.exports = router
