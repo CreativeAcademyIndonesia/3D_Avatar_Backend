@@ -11,9 +11,10 @@
   "description": "",
   "dependencies": {
     "@google-cloud/text-to-speech": "^5.4.0",
-    "@langchain/community": "^0.3.0",
-    "@langchain/core": "^0.3.0",
+    "@langchain/community": "^0.3.1",
+    "@langchain/core": "^0.3.3",
     "@langchain/google-genai": "^0.1.0",
+    "@langchain/langgraph": "^0.2.8",
     "@langchain/openai": "^0.2.11",
     "cheerio": "^1.0.0",
     "cors": "^2.8.5",

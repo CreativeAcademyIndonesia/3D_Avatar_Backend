@@ -31,8 +31,7 @@ const { PDFLoader } = require("@langchain/community/document_loaders/fs/pdf")
 const { formatDocumentsAsString } = require("langchain/util/document")
 const { convertTextToSpeech } = require("./avatar/convertTextToSpeech")
 const { lipSyncMessage, audioFileToBase64, readJsonTranscript } = require("./avatar/utils")
-let chat_history = [];
-let ai_message = []
+const chat_history = [];
 const path = require('path');
 const projectRoot = path.resolve(__dirname, '..');
 
@@ -46,7 +45,7 @@ const avatarResponseSchema = z.object({
       })
     )
     .min(1)
-    .max(1)
+    .max(3)
     .describe("Array pesan yang akan disampaikan oleh avatar, maksimal 3 pesan")
 });
 
@@ -56,56 +55,48 @@ const chatAvatar = async (req, res) => {
     const { question } = req.body
 
     const modelLLM = new ChatGoogleGenerativeAI({
-      model: "gemini-1.5-flash",
+      model: "gemini-1.5-pro-latest",
       temperature: 0,
       maxRetries: 2,
     });
     
-    const contextualizeQSystemPrompt = `Jika terdapat riwayat percakapan Tolong Buatkan pertanyaan baru agar memiliki konteks yang jelas terhadap percakapan sebelumnya, Jika tidak ada riwayat percakapan atau tidak ada riwayat yang relevan cukup jawab dan kembalikan sama dengan pertanyaan terbaru apa adanya. misalnya user question hallo, maka jawab dengan hallo jika tidak ada riwayat percakapan, selalu jawab hanya dengan query pertanyaan baru saja tidak ada yang lain.`;
+    const contextualizeQSystemPrompt = `Jika terdapat riwayat percakapan Tolong Buatkan pertanyaan baru agar memiliki konteks yang jelas terhadap percakapan sebelumnya, Jika tidak ada riwayat percakapan atau tidak ada riwayat yang relevan cukup jawab dan kembalikan sama dengan pertanyaan terbaru apa adanya. misalnya user question hallo, maka jawab dengan hallo jika tidak ada riwayat percakapan`;
     
     const contextualizeQPrompt = ChatPromptTemplate.fromMessages([
       ["system", contextualizeQSystemPrompt],
       new MessagesPlaceholder("chat_history"),
       ["human", "{question}"],
     ]);
-
+    
     const contextualizeQChain = contextualizeQPrompt
-      .pipe(modelLLM)
-      .pipe(new StringOutputParser());
+    .pipe(modelLLM)
+    .pipe(new StringOutputParser());
+  
+    const quryTranform = await contextualizeQChain.invoke({
+      chat_history: chat_history.length > 0 ? chat_history.slice(-8) : [],
+      question: question,
+    })
+    // console.log(jawaban)
+    // res.send('ok')
+    // return
 
-    let quryTranform = question
-    if(chat_history.length > 0 ){
-      quryTranform = await contextualizeQChain.invoke({
-        chat_history: chat_history.length > 0 ? chat_history.slice(-8) : [],
-        question: question,
-      })
-    }
+    const SYSTEM_TEMPLATE = `Anda ditugaskan menjadi seorang psikiater untuk meminimalisir kemungkinan bunuh diri, nantinya kamu harus menjawab pertanyaan user dan berprilaku seperti apa yang telah saya instruksikan, anda bertugas untuk bertanya, mengupulkan dan menggali data berdasarkan  jawaban dari user untuk mengetahui prilaku kemungkinan Bunuh Diri, anda harus punya prilaku empathy yang tinggi dan punya emosional selayaknya seperti teman agar user merasanyaman berinteraksi dengan anda, anda juga harus aktif bertanya, daftar pertanyaan dapat kamu lihat dibawah atau buat variasi pertanyaan lain yang relevan, anda juga diperbolehkan menggunakan emoticon memeberikan solusi dan motivasi sebagai bentuk emosional dan perasaan anda, jangan bertanya dengan pertanyaan yang sama tinjau pada history chat untuk mengetahuinya. 
+
+    Berikut beberapa pertanyaan yang harus anda tanyakan dan gali kepada user, anda tidak perlu menampilkan secara eksplisit daftar jawaban yang bisa user pilih. anda dapat membuat variasi pertanyaan yang relevan agar tidak kaku dan terlihat natural. 
+    Pertanyaan 1 : Apakah Anda pernah berpikir atau mencoba untuk bunuh diri?
+    Pertanyaan 2 : Seberapa sering Anda berpikir untuk bunuh diri dalam setahun terakhir?
+    Pertanyaan 3 : Apakah Anda pernah memberi tahu seseorang bahwa Anda akan melakukan bunuh diri, atau bahwa Anda mungkin melakukannya?
+    Pertanyaan 4 : Seberapa mungkin Anda akan mencoba bunuh diri suatu hari nanti? 
     
-    const suicidePreventionPrompt = ChatPromptTemplate.fromTemplate(
-      `Anda ditugaskan menjadi seorang psikiater untuk meminimalisir kemungkinan bunuh diri, nantinya kamu harus menjawab pertanyaan user dan berprilaku seperti apa yang telah saya instruksikan, anda bertugas untuk bertanya, mengupulkan dan menggali data berdasarkan  jawaban dari user untuk mengetahui prilaku kemungkinan Bunuh Diri, anda harus punya prilaku empathy yang tinggi dan punya emosional selayaknya seperti teman agar user merasanyaman berinteraksi dengan anda, anda juga harus aktif bertanya, daftar pertanyaan dapat kamu lihat dibawah atau buat variasi pertanyaan lain yang relevan, anda juga diperbolehkan menggunakan emoticon memeberikan solusi dan motivasi sebagai bentuk emosional dan perasaan anda, jangan bertanya dengan pertanyaan yang sama tinjau pada history chat untuk mengetahuinya. 
-
-      Berikut beberapa pertanyaan yang harus anda tanyakan dan gali kepada user, anda tidak perlu menampilkan secara eksplisit daftar jawaban yang bisa user pilih. anda dapat membuat variasi pertanyaan yang relevan agar tidak kaku dan terlihat natural. 
-      Pertanyaan 1 : Apakah Anda pernah berpikir atau mencoba untuk bunuh diri?
-      Pertanyaan 2 : Seberapa sering Anda berpikir untuk bunuh diri dalam setahun terakhir?
-      Pertanyaan 3 : Apakah Anda pernah memberi tahu seseorang bahwa Anda akan melakukan bunuh diri, atau bahwa Anda mungkin melakukannya?
-      Pertanyaan 4 : Seberapa mungkin Anda akan mencoba bunuh diri suatu hari nanti? 
-      
-      <percakapan sebelumnya>
-      {chat_history}
-      </percakapan sebelumnya>
-      `
-    );
-
-    const suicidePreventionChain = suicidePreventionPrompt
-      .pipe(modelLLM)
-      .pipe(new StringOutputParser());
-    
-    const SYSTEM_TEMPLATE = ` Anda akan selalu menjawab dengan array JSON berisi pesan dengan format seperti dibawah. Dengan maksimal 3 pesan. Setiap pesan memiliki properti text, facialExpression, dan animation. Ekspresi wajah yang berbeda adalah: smile, sad, angry, surprised, funnyFace, dan default. Animasi yang berbeda adalah: Talking_0, Talking_1, Talking_2, Crying, Laughing, Rumba, Idle, Terrified, dan Angry. Setiap facialExpression dan animation disesuaikan dengan emosional jawaban kamu.
+    Jawaban akhir Anda akan selalu menjawab dengan array JSON berisi pesan dengan format seperti dibawah. Dengan maksimal 3 pesan. Setiap pesan memiliki properti text, facialExpression, dan animation. Ekspresi wajah yang berbeda adalah: smile, sad, angry, surprised, funnyFace, dan default. Animasi yang berbeda adalah: Talking_0, Talking_1, Talking_2, Crying, Laughing, Rumba, Idle, Terrified, dan Angry. Setiap facialExpression dan animation disesuaikan dengan emosional jawaban kamu.
     
     <JSON Answere>
     {format_instructions}
     </JSON>
     
+    <percakapan sebelumnya>
+    {chat_history}
+    </percakapan sebelumnya>
     `;
     
     const questionAnsweringPrompt = ChatPromptTemplate.fromMessages([
@@ -120,19 +111,11 @@ const chatAvatar = async (req, res) => {
       {
         question: async (input) => {
           if (input.chat_history && input.chat_history.length > 0) {
-            const contextualizedQ = await contextualizeQChain.invoke({
-              chat_history: input.chat_history,
-              question: input.question,
-            });
-            return suicidePreventionChain.invoke({
-              question: contextualizedQ,
-              chat_history: input.chat_history,
-            });
+            console.log('masuk sini ')
+            return quryTranform;
           }
-          return suicidePreventionChain.invoke({
-            question: input.question,
-            chat_history: input.chat_history,
-          });
+          console.log('masuk 2')
+          return input.question;
         },
         chat_history: (input) => input.chat_history || [],
         format_instructions: () => parser.getFormatInstructions(),
@@ -144,21 +127,14 @@ const chatAvatar = async (req, res) => {
     
     const result = await psikiater.invoke({
       question, 
-      chat_history: [],
-      // chat_history: chat_history.slice(-8),
+      chat_history: chat_history.length > 0 ? chat_history.slice(-8) : [],
     });
-    console.log('ini adalah chat history result', result.messages)
-    console.log('ini adalah chat history question', question)
-    console.log('ini adalah chat history query transform', quryTranform)
-    if(result.messages){
-      const fullText = result.messages.map(message => message.text).join('\n');
-      chat_history.push(new AIMessage(fullText))
-    }
-    chat_history.push(new HumanMessage(quryTranform))
-    // chat_history.push(result)
-    // ai_message.push(new AIMessage(result))
     
-    // console.log(result)
+    chat_history.push(new HumanMessage(question))
+    chat_history.push(new AIMessage(result))
+    
+    console.log(result)
+    // res.json(result)
     res.send(result)
       return 
       let final_answere = JSON.parse(result.answer.replace(/^```json\n|\n```$/g, ''));
