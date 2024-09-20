@@ -16,8 +16,8 @@ const execCommand = (command) => {
 const lipSyncMessage = async (message) => {
   const time = new Date().getTime();
   const rhubarbPath = path.join(projectRoot, 'bin', 'rhubarb', 'rhubarb.exe');
-  const outputPath = path.join(projectRoot, 'storage', 'avatar', 'audios', `message_${message}.json`);
-  const inputPath = path.join(projectRoot, 'storage', 'avatar', 'audios', `message_${message}.wav`);
+  const outputPath = path.join(projectRoot, 'storage', 'avatar', 'audios', `${message}.json`);
+  const inputPath = path.join(projectRoot, 'storage', 'avatar', 'audios', `${message}.wav`);
   await execCommand(`${rhubarbPath} -f json -o ${outputPath} ${inputPath} -r phonetic`);
   console.log(`Lip sync done in ${new Date().getTime() - time}ms`);
 };
