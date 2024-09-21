@@ -6,6 +6,7 @@ const llmRoute = require('./src/routes/llmRoute')
 const cors = require('cors') // Tambahkan middleware CORS
 
 app.use(express.json())
+app.options('*', cors());
 app.use(cors());
 
 app.use('/avatar/chat', llmRoute)
