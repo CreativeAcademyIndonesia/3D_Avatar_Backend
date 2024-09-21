@@ -46,8 +46,12 @@ async function convertTextToSpeech({ text, fileName }) {
       }
     });
 
-    const ffmpegCommand = `ffmpeg -i ${tempMp3Path} -acodec pcm_s16le -ar 44100 ${saveAudioDirs}`;
-    console.log(ffmpegCommand);
+    let ffmpegPath = 'ffmpeg'
+    if (process.env.FFMPG_STATIC === 'true') {
+      ffmpegPath = path.join(projectRoot, 'bin', 'ffmpeg', 'ffmpeg');
+    }
+
+    const ffmpegCommand = `${ffmpegPath} -i ${tempMp3Path} -acodec pcm_s16le -ar 44100 ${saveAudioDirs}`;
 
     // Konversi MP3 ke WAV dengan LINEAR16 encoding menggunakan ffmpeg
     await new Promise((resolve, reject) => {
