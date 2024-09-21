@@ -9,6 +9,7 @@ const { z } = require("zod");
 const { StructuredOutputParser } = require( "@langchain/core/output_parsers")
 const { convertTextToSpeech } = require("./avatar/convertTextToSpeech")
 const { lipSyncMessage, audioFileToBase64, readJsonTranscript } = require("./avatar/utils")
+const { insert } = require('../models/db_aiModel')
 
 
 const messageHistories = {};
@@ -36,8 +37,8 @@ const chatAvatar = async (req, res) => {
 
   try{
     if( !sessionId ){
-      sessionId = sessionNumber
-      sessionNumber += 1
+      sessionId = `${new Date().toISOString().slice(0, 10).replace(/-/g, '')}_${sessionNumber}`;
+      sessionNumber += 1;
     }
     
     const model = new ChatGoogleGenerativeAI({
@@ -112,14 +113,23 @@ const chatAvatar = async (req, res) => {
     response = response.messages
     for (let i = 0; i < response.length; i++) {
       const message = response[i];
-      const fileName = `message_${i}`;
+      const fileName = `${sessionId}_message_${i}`;
       const textInput = message.text;
       await convertTextToSpeech({text : textInput, fileName})
       await lipSyncMessage(`${fileName}`);
       message.audio = await audioFileToBase64(path.join(projectRoot, 'storage', 'avatar', 'audios', `${fileName}.wav`));
-      message.lipsync = await readJsonTranscript(path.join(projectRoot, 'storage', 'avatar', 'audios', `message_${i}.json`));
+      message.lipsync = await readJsonTranscript(path.join(projectRoot, 'storage', 'avatar', 'audios', `${fileName}.json`));
     }
     const textAnswere = response.map(message => message.text).join('\n')
+
+
+    await insert({
+      nama, 
+      human_message : question, 
+      ai_message : textAnswere, 
+      session : sessionId
+    })
+
     res.status(200).json({
       session : sessionId, 
       messages : response, 
