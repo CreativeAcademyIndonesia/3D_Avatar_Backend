@@ -6,7 +6,7 @@ const llmRoute = require('./src/routes/llmRoute')
 const cors = require('cors') // Tambahkan middleware CORS
 
 app.use(express.json())
-app.use(cors({ origin: 'http://localhost:5173' })) // Izinkan CORS dari localhost:3000
+app.use(cors()) 
 
 app.use('/avatar/chat', llmRoute)
 

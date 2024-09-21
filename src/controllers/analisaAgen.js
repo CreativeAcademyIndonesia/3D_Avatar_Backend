@@ -15,7 +15,7 @@ const analyticsSchema = z.object({
       
     pertanyaan_2: z.enum(['[1]', '[2]', '[3]', '[4]', '[5]'])
       .default('[2]')
-      .describe("Pilih jawaban dari pertanyaan kedua: [1] Tidak pernah, [2] Jarang (1 kali), [3] Kadang-kadang (2 kali), [4] Sering (3-4 kali), [5] Sangat sering (5 kali atau lebih"),
+      .describe("Pilih jawaban dari pertanyaan kedua: [1] Tidak pernah, [2] Jarang (1 kali), [3] Kadang-kadang (2 kali), [4] Sering (3-4 kali), [5] Sangat sering (5 kali atau lebih)"),
       
     pertanyaan_3: z.enum(['[1]', '[2a]', '[2b]', '[3a]', '[3b]'])
       .default('[1]')
