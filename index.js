@@ -6,7 +6,13 @@ const llmRoute = require('./src/routes/llmRoute')
 const cors = require('cors') // Tambahkan middleware CORS
 
 app.use(express.json())
-app.use(cors()) 
+const corsOptions = {
+  origin: 'https://avatar.creativeacade.my.id', // Ganti dengan origin yang diizinkan
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Metode yang diizinkan
+  credentials: true // Jika Anda menggunakan cookie atau otentikasi
+};
+
+app.use(cors(corsOptions)); 
 
 app.use('/avatar/chat', llmRoute)
 
