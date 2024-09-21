@@ -11,6 +11,7 @@ const login = async (req, res) => {
 
     try {
         const result = await bcrypt.compare(password, hash);
+        // console.log(password, hash)
         if (result) {
             const payload = {
                 id : 1, 
@@ -22,7 +23,7 @@ const login = async (req, res) => {
             return res.status(200).json({ message: 'Login berhasil', token : token, username});
         } else {
             console.log('Password salah');
-            return res.status(401).json({ message: 'Password salah' });
+            return res.status(401).json({ message: 'Password salah', password, hash });
         }
     } catch (err) {
         console.error('Terjadi kesalahan:', err);
