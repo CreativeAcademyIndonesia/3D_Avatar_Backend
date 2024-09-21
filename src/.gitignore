@@ -1,1 +1,5 @@
 /storage/*
+bin*
+/bin*
+/bin/*
+bin/*

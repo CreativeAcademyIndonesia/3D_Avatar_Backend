@@ -1,3 +1,5 @@
 /node_modules
 *.env
-/src/storage/*
+# /src/storage/*
+# /src/storage/
+/src/bin/ffmpeg/

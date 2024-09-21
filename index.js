@@ -8,6 +8,9 @@ const cors = require('cors') // Tambahkan middleware CORS
 app.use(express.json())
 app.use(cors()) 
 
+app.use('/', (req, res)=>{
+  res.send('it works')
+})
 app.use('/avatar/chat', llmRoute)
 
 app.listen(port, () => {
