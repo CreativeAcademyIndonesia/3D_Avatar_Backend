@@ -16,3 +16,11 @@ export NVM_DIR="$HOME/.nvm"
 nvm --version
 
 install ffmpeg sudo apt install ffmpeg
+
+git clone https://github.com/CreativeAcademyIndonesia/3D_Avatar_Backend.git
+
+isntall rhubrab wget https://github.com/DanielSWolf/rhubarb-lip-sync/releases/download/v1.13.0/Rhubarb-Lip-Sync-1.13.0-Linux.zip
+sudo apt install unzip
+mkdir rhubarb
+unzip Rhubarb-Lip-Sync-1.13.0-Linux.zip -d rhubarb
+chmod +x rhubarb
