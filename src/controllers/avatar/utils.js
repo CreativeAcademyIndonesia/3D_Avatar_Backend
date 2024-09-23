@@ -15,7 +15,7 @@ const execCommand = (command) => {
 
 const lipSyncMessage = async (message) => {
   const time = new Date().getTime();
-  const rhubarbPath = path.join(projectRoot, 'bin', 'rhubarb', 'rhubarb.exe');
+  const rhubarbPath = path.join(projectRoot, 'bin', 'rhubarb', 'rhubarb');
   const outputPath = path.join(projectRoot, 'storage', 'avatar', 'audios', `${message}.json`);
   const inputPath = path.join(projectRoot, 'storage', 'avatar', 'audios', `${message}.wav`);
   await execCommand(`${rhubarbPath} -f json -o ${outputPath} ${inputPath} -r phonetic`);
