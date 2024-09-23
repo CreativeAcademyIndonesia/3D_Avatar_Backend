@@ -47,9 +47,9 @@ async function convertTextToSpeech({ text, fileName }) {
     });
 
     let ffmpegPath = 'ffmpeg'
-    if (process.env.FFMPG_STATIC === 'true') {
-      ffmpegPath = path.join(projectRoot, 'bin', 'ffmpeg', 'ffmpeg');
-    }
+    // if (process.env.FFMPG_STATIC === 'true') {
+    //   ffmpegPath = path.join(projectRoot, 'bin', 'ffmpeg', 'ffmpeg');
+    // }
 
     const ffmpegCommand = `${ffmpegPath} -i ${tempMp3Path} -acodec pcm_s16le -ar 44100 ${saveAudioDirs}`;
 
