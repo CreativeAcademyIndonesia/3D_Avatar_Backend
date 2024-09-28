@@ -64,4 +64,69 @@ const saveAnalisa = async (data)=>{
     }
 }
 
-module.exports = {get, getDetailsChat, insert, deleted, saveAnalisa}
+const getUser = async (username) => {
+    try {
+        const sql = `
+            SELECT * FROM users WHERE username = ?
+        `;
+        const [result, action] = await db_ai.query(sql, [username]);
+        return result;
+    } catch (err) {
+        console.log(err);
+        throw err;
+    }
+}
+
+const createUser = async (username, password) => {
+    try {
+        // Cek apakah username sudah ada
+        const checkUserSql = `
+            SELECT * FROM users WHERE username = ?
+        `;
+        const [existingUser] = await db_ai.query(checkUserSql, [username]);
+
+        // Jika username sudah ada, return pesan bahwa user sudah ada
+        if (existingUser.length > 0) {
+            return { pesan: 'Username already exists', success: false };
+        }
+
+        // Jika username belum ada, buat user baru
+        const createUserSql = `
+            INSERT INTO users (username, password) VALUES (?, ?)
+        `;
+        const [insertResult] = await db_ai.query(createUserSql, [username, password]);
+
+        // Return hasil dari proses insert
+        return { pesan: 'User created successfully', success: true, insertId: insertResult.insertId };
+    } catch (err) {
+        console.error('Error creating user:', err);
+        // Menangani kemungkinan error database dan memberikan pesan error yang lebih deskriptif
+        return { pesan: 'Error creating user', success: false, error: err };
+    }
+};
+
+const updatePassword = async(nama, password)=>{
+    console.log(nama)
+    try {
+        // Update password pengguna berdasarkan username
+        const updateUserSql = `
+            UPDATE users SET password = ? WHERE username = ?
+        `;
+        const [updateResult] = await db_ai.query(updateUserSql, [password, nama]);
+
+        // Jika tidak ada baris yang terpengaruh, berarti username tidak ditemukan
+        if (updateResult.affectedRows === 0) {
+            return { pesan: 'User not found', success: false };
+        }
+
+        // Return hasil dari proses update
+        return { pesan: 'User updated successfully', success: true };
+    } catch (err) {
+        console.error('Error updating user:', err);
+        // Menangani kemungkinan error database dan memberikan pesan error yang lebih deskriptif
+        return { pesan: 'Error updating user', success: false, error: err };
+    }
+}
+
+
+module.exports = {get, getDetailsChat, insert, deleted, saveAnalisa, createUser, getUser, updatePassword}
