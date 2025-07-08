@@ -90,9 +90,9 @@ const createUser = async (username, password) => {
             return { pesan: 'Username already exists', success: false };
         }
 
-        // Jika username belum ada, buat user baru
+        // Jika username belum ada, buat user baru dengan role default 'user'
         const createUserSql = `
-            INSERT INTO users (username, password) VALUES (?, ?)
+            INSERT INTO users (username, password, role) VALUES (?, ?, 'user')
         `;
         const [insertResult] = await db_ai.query(createUserSql, [username, password]);
 
@@ -128,5 +128,105 @@ const updatePassword = async(nama, password)=>{
     }
 }
 
+const updateDataUser = async (username, newData) => {
+    try {
+        // Buat array untuk menyimpan field dan value yang akan diupdate
+        const updateFields = [];
+        const values = [];
+        
+        // Cek setiap field yang ada di newData
+        if (newData.username) {
+            updateFields.push('username = ?');
+            values.push(newData.username);
+        }
+        if (newData.role) {
+            updateFields.push('role = ?');
+            values.push(newData.role);
+        }
+        
+        // Jika tidak ada field yang diupdate
+        if (updateFields.length === 0) {
+            return { pesan: 'No data to update', success: false };
+        }
+        
+        // Tambahkan username original ke values array untuk WHERE clause
+        values.push(username);
+        
+        const updateUserSql = `
+            UPDATE users 
+            SET ${updateFields.join(', ')} 
+            WHERE username = ?
+        `;
+        console.log(updateUserSql)
+        const [updateResult] = await db_ai.query(updateUserSql, values);
 
-module.exports = {get, getDetailsChat, insert, deleted, saveAnalisa, createUser, getUser, updatePassword}
+        if (updateResult.affectedRows === 0) {
+            return { pesan: 'User not found', success: false };
+        }
+
+        return { pesan: 'User data updated successfully', success: true };
+    } catch (err) {
+        console.error('Error updating user data:', err);
+        return { pesan: 'Error updating user data', success: false, error: err };
+    }
+}
+
+const getDashboardOverview = async () => {
+    try {
+        const sql = `
+            SELECT 
+                nama,
+                COUNT(*) as total_chat,
+                MAX(created_at) as last_chat,
+                MIN(created_at) as first_chat
+            FROM history_chat 
+            GROUP BY nama
+        `;
+        const [result] = await db_ai.query(sql);
+        return result;
+    } catch (err) {
+        console.log(err);
+        throw err;
+    }
+}
+
+const getDashboardDetail = async (nama) => {
+    try {
+        const sql = `SELECT * FROM history_chat WHERE nama = ?`;
+        const [result] = await db_ai.query(sql, [nama]);
+        return result;
+    } catch (err) {
+        console.log(err);
+        throw err;
+    }
+}
+
+const getAllUsers = async () => {
+    try {
+        const sql = `
+            SELECT id, username, role 
+            FROM users 
+            ORDER BY username ASC
+        `;
+        const [result] = await db_ai.query(sql);
+        return { success: true, data: result };
+    } catch (err) {
+        console.error('Error getting all users:', err);
+        return { success: false, error: err };
+    }
+}
+
+module.exports = {
+    get, 
+    getDetailsChat, 
+    insert, 
+    deleted, 
+    saveAnalisa, 
+    createUser, 
+    getUser,
+    getAllUsers, 
+    updatePassword, 
+    updateDataUser,
+    getDashboardOverview, 
+    getDashboardDetail
+}

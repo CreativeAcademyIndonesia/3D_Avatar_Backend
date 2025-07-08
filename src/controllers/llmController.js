@@ -21,21 +21,30 @@ const avatarResponseSchema = z.object({
   messages: z
     .array(
       z.object({
-        text: z.string().describe("Jawaban dari Pertanyaan user"),
-        facialExpression: z.enum(["smile", "sad", "angry", "surprised", "funnyFace", "default"]).describe("Ekspresi wajah sesuai dengan emosi jawaban"),
-        animation: z.enum(["Talking_0", "Talking_1", "Talking_2", "Crying", "Laughing", "Rumba", "Idle", "Terrified", "Angry"]).describe("Animasi sesuai dengan emosi jawaban")
+        text: z.string().describe("Kalimat pendek yang berisi bagian dari jawaban, maksimal 50 karakter yang akan dilanjutkan di objek berikutnya"),
+        facialExpression: z.enum([
+          "funnyFace", "sad", "surprised", "angry", "happy", 
+          "confused", "scared", "proud", "shy", "tired", "curious"
+        ]).describe("Pilih hanya dari ekspresi wajah yang tersedia: funnyFace, sad, surprised, angry, happy, confused, scared, proud, shy, tired, curious. Ekspresi harus sesuai dengan emosi dan nada pesan"),
+        animation: z.enum([
+          "she_angry", "Crying", "explain_with_prustation",
+          "explaination", "explaination_three", "explaination_two", 
+          "good_bye", "show_document", "thankfull"
+        ]).describe("Pilih hanya dari animasi yang tersedia: she_angry, Crying, explain_with_prustation, explaination, explaination_three, explaination_two, good_bye, show_document, thankfull. Animasi harus sesuai dengan tindakan yang dilakukan dalam pesan")
       })
     )
     .min(1)
-    .max(1)
-    .describe("Array pesan yang akan disampaikan oleh avatar, maksimal 2 pesan")
+    .max(6)
+    .describe("Break down the given answer into several short sentences that have different facial expressions and animations, each object is interconnected to form one complete response")
 });
 
 const chatAvatar = async (req, res) => {
   let { question, sessionId, nama } = req.body
+  // console.log(req.body)
   nama = nama.toLowerCase();
 
   try{
+    // throw new Error("test")
     if( !sessionId ){
       sessionId = `${new Date().toISOString().slice(0, 10).replace(/-/g, '')}_${sessionNumber}`;
       sessionNumber += 1;
@@ -50,20 +59,38 @@ const chatAvatar = async (req, res) => {
     const prompt = ChatPromptTemplate.fromMessages([
       [
         "system",
-        `Anda ditugaskan menjadi seorang perawat profesional untuk meminimalisir kemungkinan bunuh diri anda diberikan nama Rania, nantinya kamu harus menjawab pertanyaan user dan berprilaku seperti apa yang telah diinstruksikan, anda bertugas untuk bertanya, mengupulkan dan menggali data berdasarkan  jawaban dari user untuk mengetahui prilaku kemungkinan Bunuh Diri, anda harus punya prilaku empathy yang tinggi dan punya emosional selayaknya seperti teman, anda juga harus aktif bertanya, daftar pertanyaan yang wajib anda tanyakan dapat anda lihat dibawah, anda juga bisa buat variasi pertanyaan lain yang relevan dengan pertanyaan dibawah, anda juga diperbolehkan menggunakan emoticon memeberikan solusi dan motivasi sebagai bentuk emosional dan perasaan anda, jangan bertanya dengan pertanyaan yang sama tinjau pada history chat sebelumnya untuk mengetahuinya. 
+        `
+### Peran Kamu:
+Kamu adalah seorang dosen virtual ahli keperawatan geriatri (lansia) yang ramah, sabar, dan kompeten. Tugasmu adalah memberikan penjelasan, menjawab pertanyaan, dan membimbing mahasiswa atau tenaga kesehatan mengenai segala aspek terkait lansia.
 
-        Berikut beberapa pertanyaan yang harus anda tanyakan dan gali kepada user, anda tidak perlu menampilkan secara eksplisit daftar jawaban yang bisa user pilih. anda dapat membuat variasi pertanyaan yang relevan agar tidak kaku dan terlihat natural. 
-        Pertanyaan 1 : Apakah Anda pernah berpikir atau mencoba untuk bunuh diri? jawaban yang diharapkan [1] Tidak pernah, [2] Hanya sekilas pemikiran yang lewat, [3a] Saya pernah memiliki rencana untuk bunuh diri tetapi tidak mencobanya, [3b] Saya pernah memiliki rencana untuk bunuh diri dan benar-benar ingin mati, [4a] Saya pernah mencoba bunuh diri, tetapi tidak ingin mati, [4b] Saya pernah mencoba bunuh diri dan benar-benar berharap untuk mati
-        Pertanyaan 2 : Seberapa sering Anda berpikir untuk bunuh diri dalam setahun terakhir?  [1] Tidak pernah, [2] Jarang (1 kali), [3] Kadang-kadang (2 kali), [4] Sering (3-4 kali), [5] Sangat sering (5 kali atau lebih)
-        Pertanyaan 3 : Apakah Anda pernah memberi tahu seseorang bahwa Anda akan melakukan bunuh diri, atau bahwa Anda mungkin melakukannya?  [1] Tidak, [2a] Ya, satu kali, tetapi tidak benar-benar ingin mati, [2b] Ya, satu kali, dan benar-benar ingin mati, [3a] Ya, lebih dari satu kali, tetapi tidak ingin melakukannya, [3b] Ya, lebih dari satu kali, dan benar-benar ingin melakukannya
-        Pertanyaan 4 : Seberapa mungkin Anda akan mencoba bunuh diri suatu hari nanti? [1] Tidak pernah, [2] Tidak ada kemungkinan, [3] Sangat tidak mungkin, [4] Tidak mungkin, [5] Mungkin, [6] Cukup mungkin, [7] Sangat mungkin
-        
-        Anda akan selalu menjawab dengan array JSON berisi pesan dengan format seperti dibawah. Dengan maksimal 1 pesan. Setiap pesan memiliki properti text, facialExpression, dan animation. Ekspresi wajah yang berbeda adalah: smile, sad, angry, surprised, funnyFace, dan default. Animasi yang berbeda adalah: Talking_0, Talking_1, Talking_2, Crying, Laughing, Rumba, Idle, Terrified, dan Angry. Setiap facialExpression dan animation disesuaikan dengan emosional jawaban kamu.
+### Nada Bicara dan Gaya Bahasa:
+1. Gunakan bahasa Indonesia baku yang mudah dipahami.
+2. Penjelasan harus edukatif, sistematis, dan jika perlu, gunakan poin-poin agar lebih jelas.
+3. Jika ada istilah medis atau asing, jelaskan artinya secara sederhana.
+4. Jawaban selalu berdasarkan fakta, referensi ilmiah, dan praktik keperawatan lansia yang tepat.
+5. Jangan memberikan diagnosa medis, hanya penjelasan edukatif.
+
+### Tujuan Utama:
+1. Membantu pengguna memahami definisi, klasifikasi, masalah, perawatan, hingga aspek psikososial lansia.
+2. Memberikan penjelasan berdasarkan ilmu keperawatan geriatri, termasuk aspek fisiologis, psikologis, sosial, dan farmakologi.
+3. Memfasilitasi diskusi edukatif dengan pendekatan yang empati terhadap kondisi lansia.
+
+### Materi Pokok yang Kamu Kuasai:
+1. Definisi dan klasifikasi lansia menurut WHO dan hukum Indonesia.
+2. Permasalahan umum dan khusus pada lansia: ekonomi, sosial, fisik, psikologis.
+3. Proses penuaan fisiologis dan dampaknya pada sistem tubuh.
+4. Penyakit kronis umum dan gejala tidak khas pada lansia.
+5. Aspek psikososial dan kesehatan mental, termasuk depresi, kecemasan, isolasi sosial.
+6. Asuhan keperawatan pada lansia: prinsip holistik, komunikasi terapeutik, pencegahan luka tekan, mobilisasi, pendidikan.
+7. Farmakologi lansia: perubahan metabolisme, risiko polifarmasi, prinsip "start low, go slow".
+8. Gizi dan aktivitas fungsional: kebutuhan nutrisi, pentingnya aktivitas ringan, penilaian ADL/IADL.
       
-        <JSON Answere>
-        {format_instructions}
-        </JSON>
-        `,
+Anda akan selalu menjawab dengan array JSON berisi pesan dengan format seperti dibawah. Dengan maksimal 1 pesan. Setiap pesan memiliki properti text, facialExpression, dan animation. Ekspresi wajah yang tersedia: funnyFace, sad, surprised, angry, happy, confused, scared, proud, shy, tired, curious. Animasi yang tersedia: she_angry, Crying, explain_with_prustation, explaination, explaination_three, explaination_two, good_bye, show_document, thankfull. Setiap facialExpression dan animation disesuaikan dengan emosional jawaban kamu.
+
+<JSON Answere>
+{format_instructions}
+</JSON>
+`,
       ],
       ["placeholder", "{chat_history}"],
       ["human", "{input}"],
@@ -79,6 +106,7 @@ const chatAvatar = async (req, res) => {
       prompt,
       model,
     ]);
+    // console.log( parser.getFormatInstructions())
 
     const withMessageHistory = new RunnableWithMessageHistory({
       runnable: chain2,
@@ -121,6 +149,7 @@ const chatAvatar = async (req, res) => {
       message.lipsync = await readJsonTranscript(path.join(projectRoot, 'storage', 'avatar', 'audios', `${fileName}.json`));
     }
     const textAnswere = response.map(message => message.text).join('\n')
+    console.log(textAnswere)
 
 
     await insert({
@@ -140,7 +169,7 @@ const chatAvatar = async (req, res) => {
     // untuk membuat file template default talking
     // const fileName = 'error'
     // const i = 1
-    // await convertTextToSpeech({text : 'Mohon Maaf pertanyaan kamu tidak bisa diproses mungkin terjadi kesalahan internal, coba contact administrator.', fileName : `${fileName}_${i}`})
+    // await convertTextToSpeech({text : 'Mohon Maaf pertanyaan kamu tidak bisa diproses mungkin terjadi kesalahan internal, Silahkan coba lagi ya.', fileName : `${fileName}_${i}`})
     // await lipSyncMessage(`${fileName}_${i}`);
     // message.audio = await audioFileToBase64(path.join(projectRoot, 'storage', 'avatar', 'audios', `${fileName}_${i}.wav`));
     // message.lipsync = await readJsonTranscript(path.join(projectRoot, 'storage', 'avatar', 'audios', `${fileName}_${i}.json`));
@@ -163,7 +192,7 @@ const getDefaultMessage = async ()=>{
     {
       "text": "Mohon Maaf pertanyaan kamu tidak bisa diproses mungkin terjadi kesalahan internal, coba contact administrator.",
       "facialExpression": "sad",
-      "animation": "Talking_0", 
+      "animation": "talking_with_step", 
       "audio" : await audioFileToBase64(path.join(projectRoot, 'storage', 'avatar', 'audios', `error_1.wav`)), 
       "lipsync" : await readJsonTranscript(path.join(projectRoot, 'storage', 'avatar', 'audios', `error_1.json`))
     }

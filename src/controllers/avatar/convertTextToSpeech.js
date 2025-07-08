@@ -12,6 +12,7 @@ const gTTS = require('gtts');
 
 async function convertTextToSpeech({ text, fileName }) {
   try {
+    console.log(text)
     const saveAudioDirs = path.join(projectRoot, 'storage', 'avatar', 'audios', `${fileName}.wav`);
     var gtts = new gTTS(text, 'id');
 

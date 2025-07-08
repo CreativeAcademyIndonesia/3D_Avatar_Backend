@@ -1,11 +1,10 @@
 const bcrypt = require('bcrypt');
 let jwt = require('jsonwebtoken');
-const { getUser, createUser, updatePassword } = require('../../models/db_aiModel')
+const { getUser, createUser, updatePassword, updateDataUser, getAllUsers } = require('../../models/db_aiModel')
 
 // Fungsi Login
 const login = async (req, res) => {
     const { nama, password } = req.body;
-    console.log(req.body)
 
     if (!nama || !password) {
         console.error('Masukan username dan password dengan benar.');
@@ -29,7 +28,7 @@ const login = async (req, res) => {
             const secret = 'A330214'
             const token = jwt.sign(payload, secret, { expiresIn: '4h' }); // Token JWT dengan durasi 1 jam
             console.log('Login berhasil');
-            return res.status(200).json({ pesan: 'Login berhasil', token: token });
+            return res.status(200).json({ pesan: 'Login berhasil', token: token, role: user[0].role });
         } else {
             console.log('Password salah');
             return res.status(401).json({ pesan: 'Password salah' });
@@ -95,6 +94,49 @@ const updateUsers = async (req, res) => {
     }
 };
 
+const updateDataUsers = async (req, res) => {
+    const { username, newData } = req.body;
+
+    if (!username || !newData) {
+        console.error('Data yang diperlukan tidak lengkap');
+        return res.status(400).json({ pesan: 'Data yang diperlukan tidak lengkap' });
+    }
+
+    try {
+        const result = await updateDataUser(username, newData);
+
+        if (result.success) {
+            console.log('Data user berhasil diupdate');
+            return res.status(200).json({ pesan: 'Data user berhasil diupdate' });
+        } else {
+            console.error(result.pesan);
+            return res.status(400).json({ pesan: result.pesan });
+        }
+    } catch (err) {
+        console.error('Terjadi kesalahan:', err);
+        return res.status(500).json({ pesan: 'Terjadi kesalahan saat update data user' });
+    }
+};
+
+const getAllUsersController = async (req, res) => {
+    try {
+        const result = await getAllUsers();
+
+        if (result.success) {
+            return res.status(200).json({ 
+                pesan: 'Berhasil mengambil data users',
+                data: result.data 
+            });
+        } else {
+            console.error('Gagal mengambil data users');
+            return res.status(400).json({ pesan: 'Gagal mengambil data users' });
+        }
+    } catch (err) {
+        console.error('Terjadi kesalahan:', err);
+        return res.status(500).json({ pesan: 'Terjadi kesalahan saat mengambil data users' });
+    }
+};
+
 const accessValidation = (req, res, next) => {
     const { authorization } = req.headers;
     if (!authorization) {
@@ -121,5 +163,7 @@ module.exports = {
     login,
     registers,
     updateUsers,
+    updateDataUsers,
+    getAllUsersController,
     accessValidation
 }
