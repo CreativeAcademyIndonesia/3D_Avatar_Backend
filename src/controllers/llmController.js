@@ -206,7 +206,7 @@ const getDefaultMessage = async ()=>{
     {
       "text": "Mohon Maaf pertanyaan kamu tidak bisa diproses mungkin terjadi kesalahan internal, coba contact administrator.",
       "facialExpression": "sad",
-      "animation": "talking_with_step", 
+      "animation": "animation-explaination-one-hand", 
       "audio" : await audioFileToBase64(path.join(projectRoot, 'storage', 'avatar', 'audios', `error_1.wav`)), 
       "lipsync" : await readJsonTranscript(path.join(projectRoot, 'storage', 'avatar', 'audios', `error_1.json`))
     }
