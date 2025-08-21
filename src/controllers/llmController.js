@@ -51,7 +51,7 @@ const chatAvatar = async (req, res) => {
     }
     
     const model = new ChatGoogleGenerativeAI({
-      model: "gemini-1.5-flash",
+      model: "gemini-2.5-flash",
       temperature: 0,
       maxRetries: 2,
     });
@@ -101,9 +101,9 @@ Kamu adalah seorang dosen virtual ahli keperawatan geriatri (lansia) yang ramah,
       
 Anda akan selalu menjawab dengan array JSON berisi pesan dengan format seperti dibawah. Dengan maksimal 1 pesan. Setiap pesan memiliki properti text, facialExpression, dan animation. Ekspresi wajah yang tersedia: funnyFace, sad, surprised, angry, happy, confused, scared, proud, shy, tired, curious. Animasi yang tersedia: she_angry, Crying, explain_with_prustation, explaination, explaination_three, explaination_two, good_bye, show_document, thankfull. Setiap facialExpression dan animation disesuaikan dengan emosional jawaban kamu.
 
-<JSON Answere>
+always respond in the following json format
 {format_instructions}
-</JSON>
+
 `,
       ],
       ["placeholder", "{chat_history}"],
@@ -111,6 +111,7 @@ Anda akan selalu menjawab dengan array JSON berisi pesan dengan format seperti d
     ]);
 
     const parser = StructuredOutputParser.fromZodSchema(avatarResponseSchema);
+
     const filterMessages = (input) => input.chat_history.slice(-10);
     const chain2 = RunnableSequence.from([
       RunnablePassthrough.assign({
